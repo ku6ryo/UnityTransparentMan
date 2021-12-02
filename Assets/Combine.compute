@@ -1,0 +1,16 @@
+#pragma kernel CSMain
+
+Texture2D<float4> Current;
+Texture2D<float4> Previous;
+Texture2D<float4> Mask;
+RWTexture2D<float4> Output;
+
+[numthreads(8, 8, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+  if (Mask[id.xy].x > 0) {
+    Output[id.xy] = Previous[id.xy];
+  } else {
+    Output[id.xy] = Current[id.xy];
+  }
+}

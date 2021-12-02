@@ -1,0 +1,27 @@
+#pragma kernel Preprocess
+
+// Input image size defined by neural network model.
+#define NN_INPUT_SIZE 256
+
+sampler2D Input;
+RWStructuredBuffer<float> Result;
+
+[numthreads(8, 8, 1)]
+void Preprocess(uint3 id : SV_DispatchThreadID)
+{
+    // Caluculate vertically flipped UV.
+    float2 uv = float2(0.5 + id.x, NN_INPUT_SIZE - 0.5 - id.y) / NN_INPUT_SIZE;
+
+    // Caluculate vertically flipped UV gradients.
+    float2 duv_dx = float2(1.0 / NN_INPUT_SIZE, 0);
+    float2 duv_dy = float2(0, -1.0 / NN_INPUT_SIZE);
+
+    // Texture sample
+    float3 rgb = tex2Dgrad(Input, uv, duv_dx, duv_dy).rgb;
+
+    // Generate output buffer
+    uint offs = (id.y * NN_INPUT_SIZE + id.x) * 3;
+    Result[offs + 0] = rgb.r;
+    Result[offs + 1] = rgb.g;
+    Result[offs + 2] = rgb.b;
+}
